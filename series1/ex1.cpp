@@ -3,21 +3,45 @@
 #include <vector>
 using namespace std;
 
-int main(int argc, char **argv) {
-  ifstream infile;
-  int M, N;
-  vector<int> v;
-  infile.open(argv[1]);
-  infile >> M;
-  infile >> N;
+int sum(int a[], int begin, int end) {
+  int sum = 0;
+  for (int i = begin; i < end; ++i)
+    sum += a[i];
+  return sum;
+}
 
-  int a;
-  while (infile >> a) {
-    v.push_back(a);
+int main(int argc, char **argv) {
+  ifstream file;
+  int M, N;
+
+  file.open(argv[1]);
+  file >> M;
+  file >> N;
+  int a[M];
+
+  cout << "M = " << M << endl;
+  cout << "N = " << N << endl;
+
+  int c;
+  for (int i = 0; i < M; ++i) {
+    file >> a[i];
+    cout << "a[" << i << "] = " << a[i] << endl;
   }
 
-
-  // for (int i : v)
-  //   cout << i << ' ';
-  // cout << endl;
+  int average = 0;
+  int k = 0; // maximum good days
+  for (int range = 1; range < M; ++range) {
+    cout << "range = " << range << endl;
+    bool found = false;
+    for (int start = 0; start + range < M; ++start) {
+      cout << "start = " << start << endl;
+      average = (double) sum(a, start, start + range)/(N*range);
+        if (average <= -1) {
+          found = true;
+          break;
+       }
+    }
+    if (found) k = range;
+  }
+  cout << k << endl;
 }
