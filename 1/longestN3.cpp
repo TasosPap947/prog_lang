@@ -19,23 +19,24 @@ int main(int argc, char **argv) {
   file >> N;
   int a[M];
 
-  cout << "M = " << M << endl;
-  cout << "N = " << N << endl;
+  //cout << "M = " << M << endl;
+  //cout << "N = " << N << endl;
 
-  int c;
+  //int c;
   for (int i = 0; i < M; ++i) {
     file >> a[i];
-    cout << "a[" << i << "] = " << a[i] << endl;
+    //cout << "a[" << i << "] = " << a[i] << endl;
   }
 
-  int average = 0;
+  double average = 0;
   int k = 0; // maximum good days
-  for (int range = 1; range < M; ++range) {
-    cout << "range = " << range << endl;
+  for (int range = 1; range < M+1; ++range) {
+    //cout << "range = " << range << endl;
     bool found = false;
-    for (int start = 0; start + range < M; ++start) {
-      cout << "start = " << start << endl;
+    for (int start = 0; start + range < M+1; ++start) {
+      //cout << "start = " << start << endl;
       average = (double) sum(a, start, start + range)/(N*range);
+      cout << average << " ";
         if (average <= -1) {
           found = true;
           break;
