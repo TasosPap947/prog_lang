@@ -55,6 +55,9 @@ seen = set()
 # BFS
 #===============================================================================
 
+duplicates = 0
+uniques = 0
+
 if sorted(Q_init):
 	print("empty")
 else:
@@ -67,11 +70,16 @@ else:
 
 			if not S_next and sorted(Q_next):
 				print(string_next)
+				print(duplicates)
+				print(uniques)
 				break
 
 			state = str((Q_next, S_next))
 
+			if state in seen:
+				duplicates += 1
 			if not state in seen:
+				uniques += 1
 				State_Q.append((Q_next, S_next, string_next))
 				seen.add(state)
 
@@ -80,10 +88,15 @@ else:
 
 			if not S_next and sorted(Q_next):
 				print(string_next)
+				print(duplicates)
+				print(uniques)
 				break
 
 			state = str((Q_next, S_next))
 
+			if state in seen:
+				duplicates += 1
 			if not state in seen:
+				uniques += 1
 				State_Q.append((Q_next, S_next, string_next))
 				seen.add(state)
