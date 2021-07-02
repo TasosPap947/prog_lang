@@ -1,14 +1,16 @@
+#:- dynamic visited/2.
 qssort(File, Answer) :-
-  read_input(File, N, L),
-  N = N,
+  read_input(File, L),
   Q_init = L,
   S_init = [],
-  (isSorted(Q_init) -> Answer = "empty", !
+  ( isSorted(Q_init) ->
+    Answer = "empty"
   ;
-  length(Moves, _),
-  solve(Q_init, S_init, Moves),
-  atomics_to_string(Moves, Answer),
-  !).
+    empty_assoc(Assoc),
+    length(Moves, _),
+    solve(Q_init, S_init, Assoc, Moves),
+    atomics_to_string(Moves, Answer), !
+  ).
 
 %===============================================================================
 % Predicates
@@ -17,7 +19,7 @@ qssort(File, Answer) :-
 isSorted([]).
 isSorted([_]).
 isSorted([A1, A2 | T]) :-
-  A1 =< A2,
+  A1 < A2,
   isSorted([A2 | T]).
 
 isEmpty([]).
@@ -37,26 +39,39 @@ move(Q, [Hs|Ts], "S", Q_next, S_next) :-
 solve(Q, S, _, []) :-
   isFinal(Q, S).
 
-solve(Q, S, [Move|Moves]) :-
+solve(Q, S, Assoc, [Move|Moves]) :-
   move(Q, S, Move, Q_next, S_next),
-  solve(Q_next, S_next, Moves).
+  ( not_assoc((Q, S), Assoc, 0) ->
+    put_assoc((Q, S), Assoc, 0, NewAssoc),
+    solve(Q_next, S_next, NewAssoc, Moves), !
+  ;
+    dummy()
+  ).
 
+
+not_assoc(X, Assoc, 0) :-
+  \+get_assoc(X, Assoc, 0), !.
+
+dummy().
 
 %===============================================================================
 % I/O
 %===============================================================================
+
+count([], Acc, Acc).
+count([_|T], Acc, Result) :-
+  NewAcc is Acc + 1,
+  count(T, NewAcc, Result).
+
 
 print_list([]).
 print_list([First|Rest]) :-
     write(First),
     print_list(Rest).
 
-% print_solution([H|T]) :-
-%   (H = q)
-
-read_input(File, N, L) :-
+read_input(File, L) :-
     open(File, read, Stream),
-    read_line(Stream, [N]),
+    read_line(Stream, [_]),
     read_line(Stream, L).
 
 read_line(Stream, C) :-

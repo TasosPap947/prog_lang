@@ -1,3 +1,6 @@
+longest(File, Answer) :-
+  longest(File, Answer, false).
+
 longest(File, Answer, Debug) :-
     read_input(File, M, N, A1),
     M = M,
