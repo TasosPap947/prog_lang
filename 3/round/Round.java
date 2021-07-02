@@ -7,7 +7,7 @@ public class Round {
       //========================================================================
       // Read from file.
       //========================================================================
-      BufferedReader in = new BufferedReader(new FileReader(args[1]));
+      BufferedReader in = new BufferedReader(new FileReader(args[0]));
       String line = in.readLine();
       String[] a = line.split(" ");
       int N = Integer.parseInt(a[0]);
