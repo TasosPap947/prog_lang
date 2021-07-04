@@ -70,8 +70,8 @@ else:
 
 			if not S_next and sorted(Q_next):
 				print(string_next)
-				print(duplicates)
-				print(uniques)
+				print("Duplicates = {}".format(duplicates))
+				print("Uniques = {}".format(uniques))
 				break
 
 			state = str((Q_next, S_next))
@@ -88,8 +88,8 @@ else:
 
 			if not S_next and sorted(Q_next):
 				print(string_next)
-				print(duplicates)
-				print(uniques)
+				print("Duplicates = {}".format(duplicates))
+				print("Uniques = {}".format(uniques))
 				break
 
 			state = str((Q_next, S_next))
