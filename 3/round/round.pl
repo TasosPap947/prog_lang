@@ -14,7 +14,8 @@ testFunction(File, City_num, L, Zero_amount,
      Slow_city_costs_result,
      Min_list_result,
      Cars_per_city_result,
-     Fill_with_zeros_result) :-
+     Fill_with_zeros_result,
+     Max_helper) :-
 
   write("\n"),
   % +File
@@ -41,8 +42,16 @@ testFunction(File, City_num, L, Zero_amount,
   Prev_city_max = City_cost_result_max,
   Prev_city_max_position = City_cost_result_max_position,
   %
+  sort(Car_list, Max_helper_intermediate),
+  Max_helper_intermediate = [Max_helper_head1, Max_helper_head2 | Max_helper_tail],
+  (Max_helper_head1 =:= 0 ->
+    append(Max_helper_tail, [0], Max_helper)
+  ;
+    Max_helper = [Max_helper_head2 | Max_helper_tail]
+  ),
+
   % % -Fast_city_costs_result
-  fastCityCosts(Car_list, 0, City_list, Prev_city_cost, Prev_city_max, Prev_city_max_position, K, N, [], Fast_city_costs_result),
+  fastCityCosts(Car_list, 0, City_list, Prev_city_cost, Prev_city_max, Prev_city_max_position, K, N, [], Max_helper, Fast_city_costs_result),
   %
   List_of_tuples = All_city_costs_wrapper_result,
   %
@@ -64,9 +73,10 @@ test(M, C, City_cost_result_sum, City_cost_result_max, City_cost_result_max_posi
      Slow_city_costs_result,
      Min_list_result,
      Cars_per_city_result,
-     Fill_with_zeros_result) :-
-  File = "r1.txt",
-  City_num = 4,
+     Fill_with_zeros_result,
+     Max_helper) :-
+  File = "r5.txt",
+  City_num = 0,
   L = [1, 2, 3],
   Zero_amount = 3,
   testFunction(File, City_num, L, Zero_amount,
@@ -77,7 +87,8 @@ test(M, C, City_cost_result_sum, City_cost_result_max, City_cost_result_max_posi
        Slow_city_costs_result,
        Min_list_result,
        Cars_per_city_result,
-       Fill_with_zeros_result).
+       Fill_with_zeros_result,
+       Max_helper).
 
 % round(+File, -M, -C)
 round(File, M, C) :-
@@ -121,29 +132,80 @@ allCityCostsWrapper(Car_list, City_list, K, N, Result) :-
   cityCost(Car_list, 0, 0, 0, K, N, 0, 0, Result_cost, Result_max, Result_max_position),
   (Cost, Max, Max_position) = (Result_cost, Result_max, Result_max_position),
   City_list = [_ | T],
-  fastCityCosts(Car_list, 0, T, Cost, Max, Max_position, K, N, [(Cost, 0)], Result).
-
-% fastCityCosts(+Car_list, ~Prev_city_num, +City_list, ~Prev_city_cost, ~Prev_city_max, ~Prev_city_max_position, +K, +N, ~Acc, -Result)
-fastCityCosts(_, _, [], _, _, _, _, _, Acc, Result) :-
+  sort(Car_list, Max_helper_intermediate),
+  Max_helper_intermediate = [Max_helper_head1, Max_helper_head2 | Max_helper_tail],
+  (Max_helper_head1 =:= 0 ->
+    append(Max_helper_tail, [0], Max_helper)
+  ;
+    Max_helper = [Max_helper_head2 | Max_helper_tail]
+  ),
+  ( Max =< Cost - Max + 1 ->
+    fastCityCosts(Car_list, 0, T, Cost, Max, Max_position, K, N, [(Cost, 0)], Max_helper, Result)
+  ;
+    fastCityCosts(Car_list, 0, T, Cost, Max, Max_position, K, N, [], Max_helper, Result)
+  ).
+% fastCityCosts(+Car_list, ~Prev_city_num, +City_list, ~Prev_city_cost, ~Prev_city_max, ~Prev_city_max_position, +K, +N, ~Acc, Max_helper, -Result)
+fastCityCosts(_, _, [], _, _, _, _, _, Acc, _, Result) :-
   reverse(Acc, Result).
-fastCityCosts(Car_list, Prev_city_num, City_list, Prev_city_cost, Prev_city_max, Prev_city_max_position, K, N, Acc, Result) :-
+
+fastCityCosts(Car_list, Prev_city_num, City_list, Prev_city_cost, Prev_city_max, Prev_city_max_position, K, N, Acc, [], Result) :-
   City_list = [H | T],
   New_city_cost is Prev_city_cost + K - H * N,
   ( Prev_city_max_position =\= Prev_city_num ->
-      New_city_max is Prev_city_max,
-      New_city_max_position is Prev_city_max_position
+      New_city_max is Prev_city_max + 1,
+      New_city_max_position is Prev_city_max_position,
+      New_max_helper = []
   ;
-    cityCost(Car_list, Prev_city_num, 0, 0, K, N, 0, 0, _, Result_max, Result_max_position),
-    New_city_max is Result_max,
-    New_city_max_position is Result_max_position
+    % cityCost(Car_list, Prev_city_num, 0, 0, K, N, 0, 0, _, Result_max, Result_max_position),
+    (false ->
+      New_city_max is N - (M - Prev_city_num),
+      New_city_max_position = M,
+      New_max_helper = []
+    ;
+      New_city_max is Prev_city_num,
+      New_city_max_position = Prev_city_max_position,
+      New_max_helper = []
+    )
   ),
   New_city_num is Prev_city_num + 1,
   (New_city_max > New_city_cost - New_city_max + 1 ->
     NewAcc = Acc
   ;
+    % write("Adding "), write((New_city_cost, New_city_max)), write(" "), write("\n"),
     NewAcc = [(New_city_cost, New_city_num) | Acc]
   ),
-  fastCityCosts(Car_list, New_city_num, T, New_city_cost, New_city_max, New_city_max_position, K, N, NewAcc, Result).
+  fastCityCosts(Car_list, New_city_num, T, New_city_cost, New_city_max, New_city_max_position, K, N, NewAcc, New_max_helper, Result).
+
+fastCityCosts(Car_list, Prev_city_num, City_list, Prev_city_cost, Prev_city_max, Prev_city_max_position, K, N, Acc, [M | Ms], Result) :-
+  % write(Prev_city_num), write(" "),
+  % write(City_list), write(" "),
+  % write([M | Ms]), write("\n"),
+  City_list = [H | T],
+  New_city_cost is Prev_city_cost + K - H * N,
+  ( Prev_city_max_position =\= Prev_city_num ->
+      New_city_max is Prev_city_max + 1,
+      New_city_max_position is Prev_city_max_position,
+      New_max_helper = [M | Ms]
+  ;
+    % cityCost(Car_list, Prev_city_num, 0, 0, K, N, 0, 0, _, Result_max, Result_max_position),
+    (M =\= 0 ->
+      New_city_max is N - (M - Prev_city_num),
+      New_city_max_position = M,
+      New_max_helper = Ms
+    ;
+      New_city_max is Prev_city_num + 1,
+      New_city_max_position = 0,
+      New_max_helper = Ms
+    )
+  ),
+  New_city_num is Prev_city_num + 1,
+  (New_city_max > New_city_cost - New_city_max + 1 ->
+    NewAcc = Acc
+  ;
+    % write("Adding "), write((New_city_cost, New_city_max)), write(" "), write("\n"),
+    NewAcc = [(New_city_cost, New_city_num) | Acc]
+  ),
+  fastCityCosts(Car_list, New_city_num, T, New_city_cost, New_city_max, New_city_max_position, K, N, NewAcc, New_max_helper, Result).
 
 % slowCityCosts(~City_num, +Car_list, +K, +N, ~Acc, -Result)
 slowCityCosts(City_num, Car_list, K, N, Acc, Result) :-
