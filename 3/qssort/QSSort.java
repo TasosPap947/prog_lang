@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.io.FileReader;
 
 class QSState {
-  private ArrayDeque<Integer> queue;
-  private ArrayList<Integer> stack;
-  private String moves;
-  private HashSet<QSState> seen;
-  private int duplicates, uniques;
+  public ArrayDeque<Integer> queue;
+  public ArrayDeque<Integer> stack;
+  public String moves;
+  public HashSet<QSState> seen;
+  public int duplicates, uniques;
 
-  public QSState(ArrayDeque<Integer> queue, ArrayList<Integer> stack, String moves, HashSet<QSState> seen, int duplicates, int uniques) {
+  public QSState(ArrayDeque<Integer> queue, ArrayDeque<Integer> stack, String moves, HashSet<QSState> seen, int duplicates, int uniques) {
     this.queue = queue;
     this.stack = stack;
     this.moves = moves;
@@ -29,46 +29,41 @@ class QSState {
     return stack.isEmpty() && isSorted();
   }
 
-  public Collection<QSState> next() {
-    Collection<QSState> states = new ArrayList<>();
-    ArrayDeque<Integer> queueCopy1 = new ArrayDeque<Integer>(queue);
-    ArrayDeque<Integer> queueCopy2 = new ArrayDeque<Integer>(queue);
-    ArrayList<Integer> stackCopy1 = new ArrayList<Integer>(stack);
-    ArrayList<Integer> stackCopy2 = new ArrayList<Integer>(stack);
-
+  public void next(ArrayDeque<QSState> states) {
     // Q-Move
-    if (!queueCopy1.isEmpty()) {
+    if (!queue.isEmpty()) {
+      ArrayDeque<Integer> queueCopy1 = new ArrayDeque<Integer>(queue);
+      ArrayDeque<Integer> stackCopy1 = new ArrayDeque<Integer>(stack);
       int q = queueCopy1.remove();
       stackCopy1.add(q);
       QSState stateQ = new QSState(queueCopy1, stackCopy1, moves + "Q", seen, duplicates, uniques);
       if (stateQ.isFinal()) {
-        // System.out.println("Duplicates: " + duplicates);
-        // System.out.println("Uniques: " + uniques);
         System.out.println(stateQ);
         System.exit(0);
       }
       if (!seen.contains(stateQ)) {
+        // System.out.println("Queue: " + stateQ.queue + "\n" + "Stack: " + stateQ.stack + "\n");
         states.add(stateQ);
         seen.add(stateQ);
       }
     }
     // S-Move
-    if (!stackCopy2.isEmpty()) {
-      int s = stackCopy2.remove(stackCopy2.size() - 1);
+    if (!stack.isEmpty()) {
+      ArrayDeque<Integer> queueCopy2 = new ArrayDeque<Integer>(queue);
+      ArrayDeque<Integer> stackCopy2 = new ArrayDeque<Integer>(stack);
+      int s = stackCopy2.removeLast();
       queueCopy2.add(s);
       QSState stateS = new QSState(queueCopy2, stackCopy2, moves + "S", seen, duplicates, uniques);
       if (stateS.isFinal()) {
-        // System.out.println("Duplicates: " + duplicates);
-        // System.out.println("Uniques: " + uniques);
         System.out.println(stateS);
         System.exit(0);
       }
       if (!seen.contains(stateS)) {
+        // System.out.println("Queue: " + stateS.queue + "\n" + "Stack: " + stateS.stack + "\n");
         states.add(stateS);
         seen.add(stateS);
       }
     }
-    return states;
   }
 
   @Override
@@ -78,40 +73,92 @@ class QSState {
 
   @Override
   public boolean equals(Object o) {
-    // Easy cases
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
     // Check elements one-by-one
 
     QSState other = (QSState) o;
 
     // Check queue for equality
 
-    Iterator<Integer> iteratorO = queue.iterator();
+    Iterator<Integer> iteratorThis = this.queue.iterator();
     Iterator<Integer> iteratorOther = other.queue.iterator();
 
     while (true) {
-      if (!iteratorO.hasNext() && !iteratorOther.hasNext()) break;
-      if (!iteratorO.hasNext() && iteratorOther.hasNext()) return false;
-      if (iteratorO.hasNext() && !iteratorOther.hasNext()) return false;
-      if (iteratorO.next() != iteratorOther.next()) return false;
+      if (!iteratorThis.hasNext() && !iteratorOther.hasNext()) break;
+      if (!iteratorThis.hasNext() && iteratorOther.hasNext()) return false;
+      if (iteratorThis.hasNext() && !iteratorOther.hasNext()) return false;
+      if (iteratorThis.next() != iteratorOther.next()) return false;
     }
 
     // Check stack for equality
 
-    for (int i = 0; i < this.stack.size() - 1; i++) {
-      if (i >= other.stack.size() || this.stack.get(i) != other.stack.get(i)) return false;
+    iteratorThis = this.stack.iterator();
+    iteratorOther = other.stack.iterator();
+
+    while (true) {
+      if (!iteratorThis.hasNext() && !iteratorOther.hasNext()) break;
+      if (!iteratorThis.hasNext() && iteratorOther.hasNext()) return false;
+      if (iteratorThis.hasNext() && !iteratorOther.hasNext()) return false;
+      if (iteratorThis.next() != iteratorOther.next()) return false;
     }
+
+    // for (int i = 0; i < this.stack.size(); i++) {
+    //   if (i >= other.stack.size() || this.stack.get(i) != other.stack.get(i)) return false;
+    // }
 
     return true;
   }
 
-  @Override
-  public int hashCode() {
-    int[] arrayFromQueue = queue.stream().mapToInt(i->i).toArray();
-    int[] arrayFromStack = stack.stream().mapToInt(i->i).toArray();
-    return Objects.hash(Arrays.hashCode(arrayFromQueue), Arrays.hashCode(arrayFromStack));
+  //============================================================================
+  // Διάφορες δοκιμαστικές συναρτήσεις hashCode
+  // Αν δεν κάνεις καμία uncomment, παίζει μέχρι το q16.txt
+  // Μπορείς να δοκιμάσεις όποια θες από τις παρακάτω, ή να φτιάξεις μία δικιά σου.
+  //============================================================================
+
+
+
+  // Stupid hashCode for performance comparison
+  // @Override
+  // public int hashCode() {
+  //   return 1;
+  // }
+
+  // HashCode using Objects.hashCode immediately upon queue and stack
+  // @Override
+  // public int hashCode() {
+  //   int hash1 = Objects.hashCode(this.queue);
+  //   int hash2 = Objects.hashCode(this.stack);
+  //   int hash = hash1 + hash2;
+  //   // System.out.println(hash);
+  //   return hash;
+  // }
+
+  // HashCode using arrayFromQueue and arrayFromStack before Objects.hash
+  // @Override
+  // public int hashCode() {
+  //   int[] arrayFromQueue = queue.stream().mapToInt(i->i).toArray();
+  //   int[] arrayFromStack = stack.stream().mapToInt(i->i).toArray();
+  //   int hash = Objects.hash(Arrays.hashCode(arrayFromQueue), Arrays.hashCode(arrayFromStack));
+  //   // System.out.println(hash);
+  //   return hash;
+  // }
+
+  // // hashCode using sum of above method
+  // public int hashCode() {
+  //   int[] arrayFromQueue = queue.stream().mapToInt(i->i).toArray();
+  //   int[] arrayFromStack = stack.stream().mapToInt(i->i).toArray();
+  //   // int hash = Objects.hash(Arrays.hashCode(arrayFromQueue), Arrays.hashCode(arrayFromStack));
+  //   // System.out.println(hash);
+  //   int hash = Arrays.hashCode(arrayFromQueue) + Arrays.hashCode(arrayFromStack);
+  //   return hash;
+  // }
+
+  // public int hashCode() {
+  //   return Objects.hashCode(queue);
+  // }
+
+
+  public String moves() {
+    return moves;
   }
 
   public boolean isSorted() {
@@ -135,11 +182,9 @@ class QSState {
     seen.add(this);
     while (!remaining.isEmpty()) {
       QSState s = remaining.remove();
-      for (QSState n : s.next()) {
-        remaining.add(n);
-      }
+      // System.out.println(s);
+        s.next(remaining);
     }
-
     return null;
   }
 }
@@ -156,21 +201,30 @@ public class QSSort {
       String [] initialQueueInStrings = line.split(" ");
       ArrayDeque<Integer> initialQueue = new ArrayDeque<Integer>();
 
-
       for (int i = 0; i < N; i++)
         initialQueue.add(Integer.parseInt(initialQueueInStrings[i]));
 
       in.close();
 
-      QSState initial = new QSState(initialQueue, new ArrayList<Integer>(), "", new HashSet<QSState>(), 0, 0);
+      QSState initial = new QSState(initialQueue, new ArrayDeque<Integer>(), "", new HashSet<QSState>(), 0, 0);
+
+      if (initial.isFinal()) {
+        System.out.println("empty");
+        System.exit(0);
+      }
+
+      // System.out.println(initial.equals(initial));
+      QSState initialCopy = new QSState(initial.queue, initial.stack, initial.moves, initial.seen, initial.duplicates, initial.uniques);
+      // System.out.println(initial.equals(initialCopy));
+
       QSState result = initial.solve();
 
       printSolution(result);
+
     }
     catch(IOException e) {}
   }
 
-  // A recursive function to print the states from the initial to the final.
   private static void printSolution(QSState s) {
     System.out.println(s);
   }
